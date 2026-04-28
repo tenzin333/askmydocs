@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Auto login
-    const loginRes = await fetch(`${API_URL}/auth/login`, {
+    const loginRes = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

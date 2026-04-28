@@ -93,3 +93,19 @@ class ChatResponse(BaseModel):
     answer: str
     session_id: UUID
     sources: Optional[list[str]] = []  # chunks used to generate answer
+
+# =====================
+# Email 
+# =====================   
+    
+class EmailRequest(BaseModel):
+    """Request body for sending emails."""
+    to: EmailStr
+    subject: str
+    message: str
+
+
+class EmailResponse(BaseModel):
+    """Response after sending email."""
+    success: bool
+    id: str

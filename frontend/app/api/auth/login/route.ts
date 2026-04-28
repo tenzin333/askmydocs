@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       return NextResponse.json(
         { detail: data.detail || "Invalid credentials" },
-        { status: res.status }
+        { status: 400 }
       )
     }
 

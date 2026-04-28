@@ -3,7 +3,17 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { toast } from "sonner"
 import { clientFetch } from "@/lib/clientFetch"
+
+function SettingsIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
 
 interface Doc {
   id: string
@@ -82,7 +92,7 @@ export default function DashboardClient({ initialDocs, userEmail }: Props) {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.type !== "application/pdf") { alert("Only PDF files are supported"); return }
+    if (file.type !== "application/pdf") { toast.error("Only PDF files are supported"); return }
     await handleUpload(file)
     e.target.value = ""
   }
@@ -94,8 +104,9 @@ export default function DashboardClient({ initialDocs, userEmail }: Props) {
       formData.append("file", file)
       const newDoc = await clientFetch("/api/documents", { method: "POST", body: formData })
       setDocs(prev => [newDoc, ...prev])
+      toast.success("Document uploaded successfully")
     } catch (err: any) {
-      alert(err.message || "Upload failed. Please try again.")
+      toast.error(err.message || "Upload failed. Please try again.")
     } finally {
       setUploading(false)
     }
@@ -107,8 +118,9 @@ export default function DashboardClient({ initialDocs, userEmail }: Props) {
     try {
       await clientFetch(`/api/documents/${id}`, { method: "DELETE" })
       setDocs(prev => prev.filter(d => d.id !== id))
-    } catch {
-      alert("Delete failed. Please try again.")
+      toast.success("Document deleted")
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed. Please try again.")
     } finally {
       setDeleting(null)
     }
@@ -123,8 +135,8 @@ export default function DashboardClient({ initialDocs, userEmail }: Props) {
         body: JSON.stringify({ document_id: docId, title: filename })
       })
       router.push(`/chat/${chatSession.id}`)
-    } catch {
-      alert("Could not start chat. Please try again.")
+    } catch (err: any) {
+      toast.error(err.message || "Could not start chat. Please try again.")
       setChatLoading(null)
     }
   }
@@ -149,7 +161,7 @@ export default function DashboardClient({ initialDocs, userEmail }: Props) {
     setIsDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (!file) return
-    if (file.type !== "application/pdf") { alert("Only PDF files are supported"); return }
+    if (file.type !== "application/pdf") { toast.error("Only PDF files are supported"); return }
     await handleUpload(file)
   }
 
@@ -185,6 +197,9 @@ export default function DashboardClient({ initialDocs, userEmail }: Props) {
         </Link>
         <div className="dash-nav-right">
           <div className="dash-avatar" title={userEmail}>{initials}</div>
+          <Link href="/settings" className="dash-logout-btn" title="Settings">
+            <SettingsIcon />
+          </Link>
           <button className="dash-logout-btn" onClick={handleLogout} title="Sign out">
             <SignOutIcon />
           </button>

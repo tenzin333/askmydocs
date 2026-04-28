@@ -8,6 +8,7 @@ import MessageBubble from "@/components/MessageBubble"
 import TypingIndicator from "@/components/TypingIndicator"
 import ChatInput from "@/components/ChatInput"
 import EmptyChat from "@/components/EmptyChat"
+import { toast } from "sonner"
 import { clientFetch } from "@/lib/clientFetch"
 
 interface Message {
@@ -69,8 +70,8 @@ export default function ChatPage() {
         const user = await clientFetch("/api/users/me")
         setUserEmail(user.email)
 
-      } catch {
-        // 
+      } catch (err: any) {
+        toast.error(err.message || "Failed to load conversation")
       } finally {
         setFetching(false)
       }
@@ -123,7 +124,10 @@ export default function ChatPage() {
 
       setMessages(prev => [...prev, aiMsg])
 
-    } catch {
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        toast.error(err.message || "Failed to get a response. Please try again.")
+      }
       setMessages(prev => prev.filter(m => m.id !== userMsg.id))
     } finally {
       setLoading(false);

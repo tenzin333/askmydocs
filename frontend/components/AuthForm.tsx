@@ -21,7 +21,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
     setLoading(true)
@@ -34,12 +34,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             body: JSON.stringify({ email, password })
         })
       } else {
-        // Register → create account → then login
         await clientFetch("/api/auth/register", {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        })
-        await clientFetch("/api/auth/login", {
             method: 'POST',
             body: JSON.stringify({ email, password })
         })
@@ -49,7 +44,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       router.refresh()
 
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Something went wrong")
+      setError(err.message || "Something went wrong")
     } finally {
       setLoading(false)
     }
@@ -99,7 +94,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
       {isLogin && (
         <p className="auth-divider">
-          <Link href="/register" className="auth-switch-link">
+          <Link href="/forgot-password" className="auth-switch-link">
             Forgot password?
           </Link>
         </p>

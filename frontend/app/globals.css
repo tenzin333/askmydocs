@@ -1886,6 +1886,129 @@ body::before {
   transform: scale(1.06);
 }
 
+/* =====================
+   SETTINGS PAGE
+===================== */
+/* =====================
+   FORGOT PASSWORD
+===================== */
+.forgot-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.forgot-sent-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.forgot-sent-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+
+.forgot-sent-desc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.auth-switch-link {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.auth-switch-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.settings-wrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.settings-card {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.settings-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px;
+  letter-spacing: -1px;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.settings-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.settings-back-link {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.settings-back-link:hover {
+  color: var(--ink);
+  border-color: rgba(15,14,13,0.2);
+}
+
 .input-hint {
   font-size: 11px;
   color: var(--muted);
