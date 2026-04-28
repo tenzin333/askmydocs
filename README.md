@@ -2,6 +2,7 @@
 
 **Chat with your PDF documents using AI.** Upload a PDF, ask questions in plain English, and get precise answers grounded in the document's content — powered by Google Gemini and vector search.
 
+Live: [AskMyDocs](https://askmydocss.vercel.app)
 ---
 
 ## Features
