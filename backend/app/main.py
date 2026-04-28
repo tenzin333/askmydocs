@@ -1,6 +1,7 @@
 from app.routers import auth, documents
 from app.routers import chats
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.database import create_tables, get_pool
 from app.routers import users
@@ -24,6 +25,18 @@ app = FastAPI(
     title="AskMyDOCS",
     version="0.1.0",
     lifespan=lifespan
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://askmydocs.vercel.app"        
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/health")
