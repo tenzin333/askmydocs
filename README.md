@@ -293,3 +293,7 @@ Chunks use an **IVFFlat index** on the `embedding` column for fast approximate n
 ## License
 
 MIT
+
+## Author
+
+Tenzin Thinlay
