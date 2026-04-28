@@ -5,7 +5,7 @@ import bcrypt
 from jose import jwt
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.services.email import send_reset_email
 from dotenv import load_dotenv
 
@@ -117,7 +117,7 @@ async def forgot_password(
 
     # Generate token
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(hours=1)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
 
     # Delete any existing reset tokens for this user
     await db.execute("""
@@ -144,8 +144,10 @@ async def reset_password(
     body: dict,
     db=Depends(get_pool)
 ):
-    token = body.get("token")
+    token = body.get("token").strip()
     new_password = body.get("new_password")
+    
+    print("q", token, new_password)
 
     if not token or not new_password:
         raise HTTPException(
@@ -165,7 +167,7 @@ async def reset_password(
         )
 
     # Check expiry
-    if datetime.utcnow() > reset["expires_at"]:
+    if datetime.now(timezone.utc) > reset["expires_at"].replace(tzinfo=timezone.utc):
         await db.execute("""
             DELETE FROM password_resets WHERE token = $1
         """, token)
