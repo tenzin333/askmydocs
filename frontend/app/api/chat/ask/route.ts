@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { serverFetch } from "@/lib/serverFetch"
 
-const API_URL = process.env.API_URL || "http://localhost:8000"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
