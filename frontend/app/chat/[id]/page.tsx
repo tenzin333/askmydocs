@@ -8,7 +8,7 @@ import MessageBubble from "@/components/MessageBubble"
 import TypingIndicator from "@/components/TypingIndicator"
 import ChatInput from "@/components/ChatInput"
 import EmptyChat from "@/components/EmptyChat"
-import { clientFetch } from "@/lib/client"
+import { clientFetch } from "@/lib/clientFetch"
 
 interface Message {
   id: string
@@ -46,12 +46,15 @@ export default function ChatPage() {
   const [fetching, setFetching] = useState(true)
   const [userEmail, setUserEmail] = useState("")
 
+  const abortControllerRef = useRef<AbortController | null>(null)
+
   // Load everything
   useEffect(() => {
     const load = async () => {
       try {
         // Current session + messages
         const data = await clientFetch(`/api/chat/session/${id}`)
+    
         setSession(data.session)
         setDocument(data.document)
         setMessages(data.messages)
@@ -67,7 +70,7 @@ export default function ChatPage() {
         setUserEmail(user.email)
 
       } catch {
-        // router.push("/dashboard")
+        // 
       } finally {
         setFetching(false)
       }
@@ -96,13 +99,16 @@ export default function ChatPage() {
     setQuestion("")
     setLoading(true)
 
+    abortControllerRef.current = new AbortController()
+
     try {
       const data = await clientFetch("/api/chat/ask", {
         method: "POST",
         body: JSON.stringify({
-          session_id: id,
+          session_id: session?.id,
           question: q
-        })
+        }),
+        signal: abortControllerRef.current.signal
       })
 
       const aiMsg: Message = {
@@ -119,16 +125,26 @@ export default function ChatPage() {
 
     } catch {
       setMessages(prev => prev.filter(m => m.id !== userMsg.id))
-      alert("Failed to get answer. Please try again.")
     } finally {
-      setLoading(false)
+      setLoading(false);
+      abortControllerRef.current = null;
     }
   }
+
+ const handleCancel = () => {
+  if (abortControllerRef.current) {
+    abortControllerRef.current.abort()
+    setLoading(false)
+    // Remove last user message
+    setMessages(prev => prev.slice(0, -1))
+  }
+}
 
   if (fetching) {
     return (
       <div className="chat-loading">
-        <p>Loading...</p>
+        <div className="chat-loading-spinner" />
+        <p>Loading your conversation…</p>
       </div>
     )
   }
@@ -137,7 +153,7 @@ export default function ChatPage() {
     <div className="chat-page">
 
       <ChatSidebar
-        document={document!}
+        doc={document!}
         sessions={sessions}
         currentSessionId={id}
         userEmail={userEmail}
@@ -147,6 +163,7 @@ export default function ChatPage() {
         <ChatHeader
           title={session?.title || "Chat"}
           filename={document?.filename || ""}
+          onSummarize={() => handleAsk("Summarize this document")}
         />
 
         <div className="messages">
@@ -168,6 +185,7 @@ export default function ChatPage() {
           onChange={setQuestion}
           onSubmit={() => handleAsk()}
           loading={loading}
+          onCancel={handleCancel}
         />
       </div>
 

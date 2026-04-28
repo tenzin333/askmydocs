@@ -18,8 +18,7 @@ export default function EmptyChat({ onSuggestion }: Props) {
       <div className="msg-content">
         <p className="msg-label">AskMyDocs</p>
         <div className="msg-bubble">
-          I've read your document. Ask me anything — I'll give you
-          precise, grounded answers.
+          <p>I&apos;ve read your document. Ask me anything — I&apos;ll give you precise, grounded answers.</p>
         </div>
         <div className="suggestions-grid">
           {suggestions.map((s) => (

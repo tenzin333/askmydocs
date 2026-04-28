@@ -1,29 +1,31 @@
 "use server"
 
-import { cookies } from "next/headers";
+import { cookies } from "next/headers"
 
-const API_URL = process.env.API_URL || "http://localhost:3000"
+const API_URL = process.env.API_URL || "http://localhost:8000"
 
 export async function getSession() {
-    const  cookiesStore = await cookies();
-    const token = cookiesStore.get("token") ?? null;
+  const cookieStore = await cookies()
+  const token = cookieStore.get("token")?.value ?? null  //  .value
+ 
+  if (!token) return null
 
-    if(!token){
-        return null;
-    }
-
-    const res = await fetch(`${API_URL}/users/me`, {
-        headers:{
-            Authorization: `Bearer ${token}`
-        },
-        cache: "no-store"
+  try {
+    const res = await fetch(`${API_URL}/api/users/me`, {  //  FastAPI direct
+      headers: {
+        Authorization: `Bearer ${token}`              //  string
+      },
+      cache: "no-store"
     })
-
-    if (!res.ok){
-        return null;
-    }
+    
+    if (!res.ok) return null
 
     const user = await res.json()
-    return { user, token }
+  
+    return { user, token }                            //  token is string
 
+  } catch {
+  
+    return null
+  }
 }
