@@ -1,23 +1,27 @@
-from flaskapi import FlaskAPI
+from app.routers import auth, documents
+from app.routers import chats
+from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.database import create_tables, get_pool
-from app.routers import auth, documents, chats, users
+from app.routers import users
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 
 @asynccontextmanager
-async def lifespan():
-    print("Starting up the  application...")
+async def lifespan(app: FastAPI):
+    print("Starting up the application...")
     await create_tables()
     
     yield
     pool = await get_pool()
     await pool.close()
-    print ("Shutting down application...")
+    print("Shutting down application...")
     
-
-app = FlaskAPI(
-    titile="AskMyDOCS",
-    description="RAG based project which reads your documents and answers your questions",
+    
+app = FastAPI(
+    title="AskMyDOCS",
     version="0.1.0",
     lifespan=lifespan
 )

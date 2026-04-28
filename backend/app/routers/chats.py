@@ -48,7 +48,7 @@ async def create_session(
         VALUES ($1, $2)
         RETURNING *
     """, body.document_id, body.title)
-
+    
     return dict(session)
 
 
@@ -57,16 +57,27 @@ async def create_session(
 # =====================
 @router.get("/sessions", response_model=list[ChatSessionResponse])
 async def get_sessions(
+    document_id: str = None,
     db=Depends(get_pool),
     current_user=Depends(get_current_user)
 ):
-    sessions = await db.fetch("""
-        SELECT cs.*
-        FROM chat_sessions cs
-        JOIN documents d ON cs.document_id = d.id
-        WHERE d.user_id = $1
-        ORDER BY cs.created_at DESC
-    """, current_user["id"])
+    print("l", document_id, current_user["id"])
+    if document_id:
+        sessions = await db.fetch("""
+            SELECT cs.*
+            FROM chat_sessions cs
+            JOIN documents d on cs.document_id = d.id
+            WHERE d.user_id = $1 AND cs.document_id = $2
+            ORDER BY cs.created_at DESC                    
+        """, current_user["id"], UUID(document_id))
+    else:
+        sessions = await db.fetch("""
+            SELECT cs.*
+            FROM chat_sessions cs
+            JOIN documents d ON cs.document_id = d.id
+            WHERE d.user_id = $1
+            ORDER BY cs.created_at DESC
+        """, current_user["id"])
 
     return [dict(s) for s in sessions]
 
@@ -100,12 +111,17 @@ async def get_session(
         WHERE session_id = $1
         ORDER BY created_at ASC
     """, id)
-
+    
+    document = await db.fetchrow("""
+        SELECT * FROM documents
+        WHERE id = $1
+    """, session["document_id"])
+  
     return {
         "session": dict(session),
-        "messages": [dict(m) for m in messages]
+        "messages": [dict(m) for m in messages],
+        "document": dict(document) if document else None 
     }
-
 
 # =====================
 #  RAG

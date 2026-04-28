@@ -15,14 +15,14 @@ router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 
 async def create_document(
-    conn,
+    db,
     user_id: UUID,
     filename: str,
     s3_key: str,
     file_url: str,
     total_chunks: int
 ) -> dict:
-    document = await conn.fetchrow("""
+    document = await db.fetchrow("""
         INSERT INTO documents (user_id, filename, s3_key, file_url, total_chunks)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *
@@ -35,13 +35,13 @@ async def create_document(
 # SAVE CHUNKS TO DB
 # =====================
 async def save_chunks(
-    conn,
+    db,
     document_id: UUID,
     chunks: list[str],
     embeddings: list[list[float]]
 ):
     for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-        await conn.execute("""
+        await db.execute("""
             INSERT INTO chunks (document_id, content, embedding, chunk_index)
             VALUES ($1, $2, $3, $4)
         """, document_id, chunk, embedding, index)
@@ -49,10 +49,10 @@ async def save_chunks(
 
 @router.get("/", response_model=list[DocumentResponse])
 async def all_docs(
-    conn=Depends(get_conn),
+    db=Depends(get_pool),
     current_user=Depends(get_current_user)
 ):
-    docs = await get_user_documents(conn, current_user["id"])
+    docs = await get_user_documents(db, current_user["id"])
     return docs
 
 
@@ -83,18 +83,22 @@ async def docs(id: str, db = Depends(get_pool), current_user = Depends(get_curre
 
 
 @router.post("/upload" , response_model = DocumentResponse)
-async def upload_doc( file, db = Depends(get_pool), current_user = Depends(get_current_user)):
+async def upload_doc( file: UploadFile = File(...), db = Depends(get_pool), current_user = Depends(get_current_user)):
     try:
+        print("a", file)
         document  = await process_upload(
             db = db,
-            user_id = current_user,
+            user_id = current_user["id"],
             file = file
         )
         
         return document
         
     except HTTPException:
-        raise
+        raise HTTPException(
+            status = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail = f"Upload failed : {str(e)}"
+        )
     
     except Exception as e:
         raise HTTPException(
@@ -106,11 +110,11 @@ async def upload_doc( file, db = Depends(get_pool), current_user = Depends(get_c
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_doc(
     id: UUID,
-    conn=Depends(get_pool),
+    db=Depends(get_pool),
     current_user=Depends(get_current_user)
 ):
     # 1. Get document
-    doc = await get_document(conn, id)
+    doc = await get_document(db, id)
 
     # 2. Check exists
     if not doc:
@@ -130,5 +134,5 @@ async def remove_doc(
     delete_from_s3(doc["s3_key"])
 
     # 5. Delete from DB (cascades to chunks + sessions + messages)
-    await delete_document(conn, id)
+    await delete_document(db, id)
 

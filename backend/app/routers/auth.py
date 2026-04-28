@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.database import get_conn
-from app.schemas import UserCreate, UserResponse, Token
+from app.database import get_pool
+from app.schema import UserCreate, UserResponse, Token
 import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -16,10 +19,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # REGISTER
 # =====================
 @router.post("/register", response_model=UserResponse)
-async def create_user(body: UserCreate, conn=Depends(get_conn)):
+async def create_user(body: UserCreate, db=Depends(get_pool)):
     
     # 1. Check if email exists
-    existing = await conn.fetchrow("""
+    existing = await db.fetchrow("""
         SELECT * FROM users WHERE email = $1
     """, body.email)
 
@@ -36,7 +39,7 @@ async def create_user(body: UserCreate, conn=Depends(get_conn)):
     ).decode("utf-8")
 
     # 3. Insert user
-    new_user = await conn.fetchrow("""
+    new_user = await db.fetchrow("""
         INSERT INTO users (email, hashed_password)
         VALUES ($1, $2)
         RETURNING *
@@ -49,10 +52,10 @@ async def create_user(body: UserCreate, conn=Depends(get_conn)):
 # LOGIN
 # =====================
 @router.post("/login", response_model=Token)
-async def login(body: UserCreate, conn=Depends(get_conn)):
+async def login(body: UserCreate, db=Depends(get_pool)):
 
     # 1. Find user by email
-    user = await conn.fetchrow("""
+    user = await db.fetchrow("""
         SELECT * FROM users WHERE email = $1
     """, body.email)
 

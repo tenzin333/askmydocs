@@ -2,7 +2,10 @@ import fitz
 import boto3
 import os
 import uuid
+from dotenv import load_dotenv
 from fastapi import HTTPException, status
+
+load_dotenv()
 
 # =====================
 # CONFIG

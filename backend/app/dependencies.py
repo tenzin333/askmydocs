@@ -4,7 +4,9 @@ from fastapi.security import OAuth2PasswordBearer
 import bcrypt
 from jose import jwt, JWTError
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
