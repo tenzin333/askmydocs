@@ -2020,3 +2020,158 @@ body::before {
   margin-left: auto;
   margin-right: auto;
 }
+
+/* =====================
+   RESPONSIVE
+===================== */
+
+/* Mobile sidebar toggle button — hidden on desktop */
+.sidebar-menu-btn {
+  display: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.5);
+  color: var(--muted);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+}
+.sidebar-menu-btn:hover { color: var(--ink); background: rgba(255,255,255,0.9); }
+
+/* Sidebar close button — hidden on desktop */
+.sidebar-close-btn {
+  display: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
+  color: rgba(245,240,232,0.5);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+}
+.sidebar-close-btn:hover { color: var(--paper); background: rgba(255,255,255,0.12); }
+
+/* Logo row inside sidebar top — flex for close button placement */
+.sidebar-logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Backdrop for mobile sidebar */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 299;
+}
+
+/* ---- TABLET & MOBILE (≤ 1024px) ---- */
+@media (max-width: 1024px) {
+
+  /* Home nav */
+  .home-nav { padding: 16px 24px; }
+
+  /* Hero: single column, hide decorative right panel */
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+  .hero-right { display: none; }
+  .hero-left {
+    padding: 60px 24px 64px;
+    border-right: none;
+  }
+
+  /* Features: stack vertically */
+  .features { grid-template-columns: 1fr; }
+  .feature {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 36px 24px;
+  }
+  .feature:last-child { border-bottom: none; }
+
+  /* CTA & footer */
+  .cta-section { padding: 80px 24px; }
+  .home-footer {
+    padding: 20px 24px;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+
+  /* Auth: hide decorative left panel */
+  .auth-wrap { grid-template-columns: 1fr; }
+  .auth-left { display: none; }
+  .auth-right { padding: 48px 24px; min-height: 100vh; }
+
+  /* Dashboard */
+  .dash-nav { padding: 14px 20px; }
+  .dash-main { padding: 32px 20px 48px; }
+  .dash-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .dash-upload-btn { width: 100%; justify-content: center; }
+
+  /* Chat: sidebar becomes an off-canvas drawer */
+  .chat-page { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    z-index: 300;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop.open { display: block; }
+
+  .sidebar-menu-btn { display: inline-flex; }
+  .sidebar-close-btn { display: inline-flex; }
+}
+
+/* ---- MOBILE ONLY (≤ 640px) ---- */
+@media (max-width: 640px) {
+
+  /* Home */
+  .hero-left { padding: 48px 20px 56px; }
+  .hero-desc { margin-bottom: 32px; }
+  .hero-actions { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .hero-actions .btn-primary { width: 100%; justify-content: center; }
+
+  /* Hide secondary nav link to save space */
+  .nav-link { display: none; }
+
+  /* Chat */
+  .messages { padding: 20px 14px; }
+  .chat-input { padding: 8px 14px 14px; }
+  .chat-top { padding: 10px 14px; gap: 10px; }
+  .chat-back { display: none; }
+
+  /* Suggestions */
+  .suggestions-grid { grid-template-columns: 1fr; }
+
+  /* Dashboard */
+  .dash-empty { padding: 60px 20px; }
+  .drag-overlay-box { padding: 32px 24px; }
+
+  /* Auth & settings */
+  .auth-right { padding: 32px 20px; }
+  .settings-main { padding: 32px 20px; }
+}

@@ -20,6 +20,8 @@ interface Props {
   sessions: Session[]
   currentSessionId: string
   userEmail: string
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 function groupSessions(sessions: Session[]) {
@@ -71,7 +73,16 @@ function SignOutIcon() {
   )
 }
 
-export default function ChatSidebar({ doc, sessions = [], currentSessionId, userEmail }: Props) {
+function XIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+export default function ChatSidebar({ doc, sessions = [], currentSessionId, userEmail, isOpen, onClose }: Props) {
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -85,14 +96,19 @@ export default function ChatSidebar({ doc, sessions = [], currentSessionId, user
   const groups = groupSessions(sessions)
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar${isOpen ? " open" : ""}`}>
 
       {/* TOP */}
       <div className="sidebar-top">
-        <Link href="/dashboard" className="sidebar-logo">
-          <span className="logo-dot" />
-          AskMyDocs
-        </Link>
+        <div className="sidebar-logo-row">
+          <Link href="/dashboard" className="sidebar-logo">
+            <span className="logo-dot" />
+            AskMyDocs
+          </Link>
+          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
+            <XIcon />
+          </button>
+        </div>
 
         <div className="sidebar-doc">
           <div className="sidebar-doc-icon">

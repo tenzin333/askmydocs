@@ -46,6 +46,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [userEmail, setUserEmail] = useState("")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -156,11 +157,19 @@ export default function ChatPage() {
   return (
     <div className="chat-page">
 
+      {/* Mobile backdrop — closes sidebar when tapped */}
+      <div
+        className={`sidebar-backdrop${sidebarOpen ? " open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
       <ChatSidebar
         doc={document!}
         sessions={sessions}
         currentSessionId={id}
         userEmail={userEmail}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <div className="chat-main">
@@ -168,6 +177,7 @@ export default function ChatPage() {
           title={session?.title || "Chat"}
           filename={document?.filename || ""}
           onSummarize={() => handleAsk("Summarize this document")}
+          onToggleSidebar={() => setSidebarOpen(prev => !prev)}
         />
 
         <div className="messages">

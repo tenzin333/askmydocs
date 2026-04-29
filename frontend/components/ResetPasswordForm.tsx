@@ -36,7 +36,7 @@ export default function ResetPasswordForm({ token }: Props) {
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match")
       return
-    }
+    } 
 
     if (newPassword.length < 8) {
       toast.error("Password must be at least 8 characters")
