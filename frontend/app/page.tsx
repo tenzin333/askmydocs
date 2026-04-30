@@ -152,7 +152,7 @@ export default function Home() {
       <footer className="home-footer">
         <div className="footer-logo">AskMyDocs</div>
         <div className="footer-credit">
-          Built by <span>Tenzin</span>
+          Built by <span>Thinlay</span>
         </div>
       </footer>
     </>
