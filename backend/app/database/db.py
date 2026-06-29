@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 load_dotenv() 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-print(DATABASE_URL)
 pool = None
 
 async def get_pool():
@@ -24,17 +23,8 @@ async def create_tables():
             """
             CREATE EXTENSION IF NOT EXISTS vector;
             CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-            
-            CREATE TABLE IF NOT EXISTS password_resets (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-            token VARCHAR(255) UNIQUE NOT NULL,
-            expires_at TIMESTAMP NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW()
-            );
 
-            CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
-
+            -- users must exist before tables that reference it
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 email VARCHAR(255) UNIQUE NOT NULL,
@@ -42,11 +32,21 @@ async def create_tables():
                 created_at TIMESTAMP DEFAULT NOW()
             );
 
+            CREATE TABLE IF NOT EXISTS password_resets (
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+                token VARCHAR(255) UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
+
             CREATE TABLE IF NOT EXISTS documents (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 filename VARCHAR(255) NOT NULL,
-                s3_key VARCHAR(255) NOT NULL, 
+                s3_key VARCHAR(255) NOT NULL,
                 file_path VARCHAR(255) NOT NULL,
                 total_chunks INT DEFAULT 0,
                 created_at TIMESTAMP DEFAULT NOW()
@@ -58,8 +58,12 @@ async def create_tables():
                 content TEXT NOT NULL,
                 embedding VECTOR(768),
                 chunk_index INT NOT NULL,
+                page_number INT,
                 created_at TIMESTAMP DEFAULT NOW()
             );
+
+            -- migrate existing chunks tables that predate page_number
+            ALTER TABLE chunks ADD COLUMN IF NOT EXISTS page_number INT;
 
             CREATE INDEX IF NOT EXISTS chunks_embeddings_idx
             ON chunks USING ivfflat (embedding vector_cosine_ops)
@@ -84,4 +88,4 @@ async def create_tables():
             CREATE INDEX IF NOT EXISTS idx_chunks_document_id ON chunks(document_id);
             CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
             CREATE INDEX IF NOT EXISTS idx_chat_sessions_document_id ON chat_sessions(document_id);
-            """        )    
+            """        )

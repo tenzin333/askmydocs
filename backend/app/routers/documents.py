@@ -14,39 +14,6 @@ from app.services.pdf import delete_from_s3
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 
-async def create_document(
-    db,
-    user_id: UUID,
-    filename: str,
-    s3_key: str,
-    file_url: str,
-    total_chunks: int
-) -> dict:
-    document = await db.fetchrow("""
-        INSERT INTO documents (user_id, filename, s3_key, file_url, total_chunks)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING *
-    """, user_id, filename, s3_key, file_url, total_chunks)
-
-    return dict(document)
-
-
-# =====================
-# SAVE CHUNKS TO DB
-# =====================
-async def save_chunks(
-    db,
-    document_id: UUID,
-    chunks: list[str],
-    embeddings: list[list[float]]
-):
-    for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-        await db.execute("""
-            INSERT INTO chunks (document_id, content, embedding, chunk_index)
-            VALUES ($1, $2, $3, $4)
-        """, document_id, chunk, embedding, index)
-        
-
 @router.get("/", response_model=list[DocumentResponse])
 async def all_docs(
     db=Depends(get_pool),
@@ -85,24 +52,21 @@ async def docs(id: str, db = Depends(get_pool), current_user = Depends(get_curre
 @router.post("/upload" , response_model = DocumentResponse)
 async def upload_doc( file: UploadFile = File(...), db = Depends(get_pool), current_user = Depends(get_current_user)):
     try:
-        print("a", file)
         document  = await process_upload(
             db = db,
             user_id = current_user["id"],
             file = file
         )
-        
+
         return document
-        
+
     except HTTPException:
-        raise HTTPException(
-            status = status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail = f"Upload failed : {str(e)}"
-        )
-    
+        # Preserve intended status codes (e.g. 400 for invalid/scanned PDFs)
+        raise
+
     except Exception as e:
         raise HTTPException(
-            status = status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail = f"Upload failed : {str(e)}"
         )
 

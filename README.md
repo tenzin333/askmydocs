@@ -137,7 +137,7 @@ cd frontend
 npm install
 
 # Create your environment file
-cp .env.local.example .env
+cp .env.local.example .env.local
 # Set API_URL if your backend is not on localhost:8000
 
 # Start the development server

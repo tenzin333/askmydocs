@@ -12,13 +12,11 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Starting up the application...")
     await create_tables()
-    
+
     yield
     pool = await get_pool()
     await pool.close()
-    print("Shutting down application...")
     
     
 app = FastAPI(

@@ -10,6 +10,7 @@ from .schemas import (
     MessageResponse,
     ChatRequest,
     ChatResponse,
+    Source,
 )
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "MessageResponse",
     "ChatRequest",
     "ChatResponse",
+    "Source",
 ]
 
     
