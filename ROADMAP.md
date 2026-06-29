@@ -61,7 +61,8 @@ The heart of the product. Ordered by user-visible impact.
 ### 2.5 — Real citations in responses 🟢
 **Done (backend):** `/ask` returns structured `sources` (`{page_number, content}`) from the actual retrieved chunks via the new `Source` schema.
 **Done (frontend):** **Fixed a bug where citations were random fake page numbers** (`Math.random()*48`) — the UI now renders real page numbers, dedups chunks from the same page, and shows the chunk text on hover.
-**Files:** [chats.py](backend/app/routers/chats.py), [schemas.py](backend/app/schema/schemas.py), [page.tsx](frontend/app/chat/[id]/page.tsx), [MessageBubble.tsx](frontend/components/MessageBubble.tsx)
+**Done (persistence):** Sources are now stored in `messages.sources` (JSONB, with migration) and decoded on load, so citations survive page reloads instead of only appearing on fresh answers.
+**Files:** [chats.py](backend/app/routers/chats.py), [schemas.py](backend/app/schema/schemas.py), [db.py](backend/app/database/db.py), [page.tsx](frontend/app/chat/[id]/page.tsx), [MessageBubble.tsx](frontend/components/MessageBubble.tsx)
 
 ---
 

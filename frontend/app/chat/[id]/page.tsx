@@ -123,7 +123,7 @@ export default function ChatPage() {
         role: "assistant",
         content: data.answer,
         created_at: new Date().toISOString(),
-        sources: data.sources?.slice(0, 3)
+        sources: data.sources
       }
 
       setMessages(prev => [...prev, aiMsg])

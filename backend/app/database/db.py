@@ -81,8 +81,12 @@ async def create_tables():
                 session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
                 role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant')),
                 content TEXT NOT NULL,
+                sources JSONB,
                 created_at TIMESTAMP DEFAULT NOW()
             );
+
+            -- migrate existing messages tables that predate sources
+            ALTER TABLE messages ADD COLUMN IF NOT EXISTS sources JSONB;
 
             CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents(user_id);
             CREATE INDEX IF NOT EXISTS idx_chunks_document_id ON chunks(document_id);

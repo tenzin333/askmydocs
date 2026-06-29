@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
 from app.database import get_pool
@@ -110,16 +111,24 @@ async def get_session(
         WHERE session_id = $1
         ORDER BY created_at ASC
     """, id)
-    
+
+    # asyncpg returns JSONB as a string — decode sources back into objects
+    parsed_messages = []
+    for m in messages:
+        msg = dict(m)
+        raw_sources = msg.get("sources")
+        msg["sources"] = json.loads(raw_sources) if raw_sources else []
+        parsed_messages.append(msg)
+
     document = await db.fetchrow("""
         SELECT * FROM documents
         WHERE id = $1
     """, session["document_id"])
-  
+
     return {
         "session": dict(session),
-        "messages": [dict(m) for m in messages],
-        "document": dict(document) if document else None 
+        "messages": parsed_messages,
+        "document": dict(document) if document else None
     }
 
 # =====================
@@ -175,30 +184,30 @@ async def ask(
         history=history,
     )
 
-    # 5. Save user message to DB
+    # 5. Page-referenced sources (page_number may be null for pre-migration chunks)
+    sources = [
+        {"page_number": m["page_number"], "content": m["content"]}
+        for m in matches
+    ]
+
+    # 6. Save user message to DB
     await db.execute("""
         INSERT INTO messages (session_id, role, content)
         VALUES ($1, $2, $3)
     """, body.session_id, "user", body.question)
 
-    # 6. Save AI answer to DB
+    # 7. Save AI answer + sources to DB (so citations survive reloads)
     await db.execute("""
-        INSERT INTO messages (session_id, role, content)
-        VALUES ($1, $2, $3)
-    """, body.session_id, "assistant", answer)
+        INSERT INTO messages (session_id, role, content, sources)
+        VALUES ($1, $2, $3, $4::jsonb)
+    """, body.session_id, "assistant", answer, json.dumps(sources))
 
-    # 7. Auto-title the session from the first question
+    # 8. Auto-title the session from the first question
     if session["title"] in (None, "", "New Chat"):
         title = body.question.strip()[:60]
         await db.execute("""
             UPDATE chat_sessions SET title = $1 WHERE id = $2
         """, title, body.session_id)
-
-    # Page-referenced sources (page_number may be null for pre-migration chunks)
-    sources = [
-        {"page_number": m["page_number"], "content": m["content"]}
-        for m in matches
-    ]
 
     return {
         "answer": answer,
