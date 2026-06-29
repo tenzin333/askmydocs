@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
 from app.database import get_pool
@@ -61,7 +62,6 @@ async def get_sessions(
     db=Depends(get_pool),
     current_user=Depends(get_current_user)
 ):
-    print("l", document_id, current_user["id"])
     if document_id:
         sessions = await db.fetch("""
             SELECT cs.*
@@ -111,16 +111,24 @@ async def get_session(
         WHERE session_id = $1
         ORDER BY created_at ASC
     """, id)
-    
+
+    # asyncpg returns JSONB as a string — decode sources back into objects
+    parsed_messages = []
+    for m in messages:
+        msg = dict(m)
+        raw_sources = msg.get("sources")
+        msg["sources"] = json.loads(raw_sources) if raw_sources else []
+        parsed_messages.append(msg)
+
     document = await db.fetchrow("""
         SELECT * FROM documents
         WHERE id = $1
     """, session["document_id"])
-  
+
     return {
         "session": dict(session),
-        "messages": [dict(m) for m in messages],
-        "document": dict(document) if document else None 
+        "messages": parsed_messages,
+        "document": dict(document) if document else None
     }
 
 # =====================
@@ -146,41 +154,65 @@ async def ask(
             detail="Session not found"
         )
 
-    # 2. Search similar chunks from pgvector
-    context_chunks = await search_similar_chunks(
+    # 2. Search similar chunks from pgvector (relevance-filtered, page-tagged)
+    matches = await search_similar_chunks(
         db=db,
         document_id=session["document_id"],
         question=body.question
     )
 
-    if not context_chunks:
+    if not matches:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No relevant content found in document"
         )
 
-    # 3. Generate answer using Gemini
+    # 3. Load recent conversation history for follow-up context
+    history_rows = await db.fetch("""
+        SELECT role, content FROM messages
+        WHERE session_id = $1
+        ORDER BY created_at DESC
+        LIMIT 10
+    """, body.session_id)
+    history = [dict(r) for r in reversed(history_rows)]
+
+    # 4. Generate answer using Gemini
+    context_chunks = [m["content"] for m in matches]
     answer = await generate_answer(
         question=body.question,
-        context_chunks=context_chunks
+        context_chunks=context_chunks,
+        history=history,
     )
 
-    # 4. Save user message to DB
+    # 5. Page-referenced sources (page_number may be null for pre-migration chunks)
+    sources = [
+        {"page_number": m["page_number"], "content": m["content"]}
+        for m in matches
+    ]
+
+    # 6. Save user message to DB
     await db.execute("""
         INSERT INTO messages (session_id, role, content)
         VALUES ($1, $2, $3)
     """, body.session_id, "user", body.question)
 
-    # 5. Save AI answer to DB
+    # 7. Save AI answer + sources to DB (so citations survive reloads)
     await db.execute("""
-        INSERT INTO messages (session_id, role, content)
-        VALUES ($1, $2, $3)
-    """, body.session_id, "assistant", answer)
+        INSERT INTO messages (session_id, role, content, sources)
+        VALUES ($1, $2, $3, $4::jsonb)
+    """, body.session_id, "assistant", answer, json.dumps(sources))
+
+    # 8. Auto-title the session from the first question
+    if session["title"] in (None, "", "New Chat"):
+        title = body.question.strip()[:60]
+        await db.execute("""
+            UPDATE chat_sessions SET title = $1 WHERE id = $2
+        """, title, body.session_id)
 
     return {
         "answer": answer,
         "session_id": body.session_id,
-        "sources": context_chunks  # chunks used to generate answer
+        "sources": sources
     }
 
 

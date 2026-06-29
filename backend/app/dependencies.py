@@ -28,7 +28,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
     
     except JWTError:
         raise HTTPException(
-            status_code = status.HTTTP_401_UNAUTHORIZED,
+            status_code = status.HTTP_401_UNAUTHORIZED,
             detail = "Invalid token"
         )
         

@@ -82,7 +82,7 @@ async def login(body: UserCreate, db=Depends(get_pool)):
     # 3. Generate JWT token
     token_data = {
         "sub": str(user["id"]),
-        "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     }
     token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -144,10 +144,8 @@ async def reset_password(
     body: dict,
     db=Depends(get_pool)
 ):
-    token = body.get("token").strip()
+    token = (body.get("token") or "").strip()
     new_password = body.get("new_password")
-    
-    print("q", token, new_password)
 
     if not token or not new_password:
         raise HTTPException(

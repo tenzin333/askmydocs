@@ -89,10 +89,15 @@ class ChatRequest(BaseModel):
     session_id: UUID
     question: str
 
+class Source(BaseModel):
+    page_number: Optional[int] = None
+    content: str  # the chunk text used to ground the answer
+
+
 class ChatResponse(BaseModel):
     answer: str
     session_id: UUID
-    sources: Optional[list[str]] = []  # chunks used to generate answer
+    sources: Optional[list[Source]] = []  # chunks used to generate answer
 
 # =====================
 # Email 

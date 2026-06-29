@@ -11,12 +11,17 @@ import EmptyChat from "@/components/EmptyChat"
 import { toast } from "sonner"
 import { clientFetch } from "@/lib/clientFetch"
 
+interface Source {
+  page_number: number | null
+  content: string
+}
+
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   created_at: string
-  sources?: string[]
+  sources?: Source[]
 }
 
 interface Session {
@@ -118,9 +123,7 @@ export default function ChatPage() {
         role: "assistant",
         content: data.answer,
         created_at: new Date().toISOString(),
-        sources: data.sources?.slice(0, 3).map((_: string, i: number) =>
-          `p. ${Math.floor(Math.random() * 48) + 1}`
-        )
+        sources: data.sources
       }
 
       setMessages(prev => [...prev, aiMsg])

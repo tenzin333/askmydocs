@@ -1,9 +1,14 @@
+interface Source {
+  page_number: number | null
+  content: string
+}
+
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   created_at: string
-  sources?: string[]
+  sources?: Source[]
 }
 
 function applyInline(text: string, key: string | number) {
@@ -55,6 +60,13 @@ function renderMarkdown(text: string) {
 export default function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === "user"
 
+  // Collapse multiple chunks from the same page into one chip
+  const sources = message.sources?.filter(
+    (s, i, arr) =>
+      s.page_number == null ||
+      arr.findIndex(o => o.page_number === s.page_number) === i
+  )
+
   return (
     <div className={`msg ${isUser ? "user" : "ai"}`}>
       <div className={`msg-avatar ${isUser ? "user" : "ai"}`}>
@@ -69,11 +81,17 @@ export default function MessageBubble({ message }: { message: Message }) {
           }
         </div>
 
-        {!isUser && message.sources && message.sources.length > 0 && (
+        {!isUser && sources && sources.length > 0 && (
           <div className="msg-sources">
             <span className="source-label">Sources</span>
-            {message.sources.map((s, i) => (
-              <span key={i} className="source-chip">{s}</span>
+            {sources.map((s, i) => (
+              <span
+                key={i}
+                className="source-chip"
+                title={s.content}
+              >
+                {s.page_number ? `p. ${s.page_number}` : "Source"}
+              </span>
             ))}
           </div>
         )}
